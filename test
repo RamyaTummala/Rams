@@ -1,17 +1,1 @@
-private static List<Extension> createValueCodeableConcept(String contantValueurl,String system,String code,String display,String gender) {
-		CodeableConcept codeableConcept = new CodeableConcept().addCoding(new Coding().setSystem(system).setCode(code).setDisplay(display));
-		List<Extension> listOfExtension = new ArrayList<>();
-		listOfExtension.add(new Extension(contantValueurl).setValue(codeableConcept));
-		if(code.equalsIgnoreCase("yes")) {
-			Extension refenceExtensiongender = new Extension();
-			refenceExtensiongender.setUrl("characteristics").setValue(new StringType("both"));
 
-		}
-			//listOfExtension.add(new  Extension("characteristics").setValue(new StringType("both")));
-		if(Constants.Suppersion_reason_code.containsKey(code))
-			listOfExtension.add(new Extension("displayIndicatorProvider",new BooleanType(Boolean.valueOf("false"))));
-		
-//		Extension mainExtenion = new Extension();
-//		mainExtenion.setUrl(url).setExtension(listOfExtension);
-		return listOfExtension ;
-	}
