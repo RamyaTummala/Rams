@@ -12,3 +12,16 @@
 				.from(exportOAFDataFromDB(jobRepository, batchTransactionManager)).on("COMPLETED").to(exportPRDataFromDB(jobRepository, batchTransactionManager))
 				.from(exportPRDataFromDB(jobRepository, batchTransactionManager)).end().build();
 		
+@SuppressWarnings("unchecked")
+	@Bean
+	public Step qualificationEntityDataFromDB(JobRepository jobRepository,
+			PlatformTransactionManager batchTransactionManager) throws Exception {
+		return new StepBuilder("qualificationEntityDataFromDB", jobRepository)
+				.<QualificationEntity, Organization>chunk(chunksize, batchTransactionManager)
+				.reader(pdtQualificationEntityReader)
+				.processor(pdtQualificationEntityProcessor.asyncQualificationEntityItemProcessor())
+				.writer(pdtQualificationEntityWriter.asyncQualificationEntityItemWriter()).faultTolerant()
+				.skip(Exception.class).skipLimit(Integer.MAX_VALUE).taskExecutor(pdtExecuter)
+				// .listener(skipListener())
+				.build();
+	}
