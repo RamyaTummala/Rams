@@ -1,1 +1,14 @@
 
+@Bean
+	public Job mainJob(JobRepository jobRepository,
+			@Qualifier("batchTransactionManager") PlatformTransactionManager batchTransactionManager) throws Exception {
+		JobBuilder jobBuilder = new JobBuilder("mainJob", jobRepository);
+		return jobBuilder.incrementer(new RunIdIncrementer())
+				.start(locationDataFromDB(jobRepository, batchTransactionManager)).on("COMPELTED").to(exportHSDataFromDB(jobRepository, batchTransactionManager))
+				.from(exportHSDataFromDB(jobRepository, batchTransactionManager)).on("COMPLETED").to(qualificationEntityDataFromDB(jobRepository, batchTransactionManager))
+				.from(qualificationEntityDataFromDB(jobRepository, batchTransactionManager)).on("COMPLETED").to(practitionerDataFromDB(jobRepository, batchTransactionManager))
+				.from(practitionerDataFromDB(jobRepository, batchTransactionManager)).on("COMPLETED").to(exportOrganisationDataFromDB(jobRepository, batchTransactionManager))
+				.from(exportOrganisationDataFromDB(jobRepository, batchTransactionManager)).on("COMPLETED").to(exportOAFDataFromDB(jobRepository, batchTransactionManager))
+				.from(exportOAFDataFromDB(jobRepository, batchTransactionManager)).on("COMPLETED").to(exportPRDataFromDB(jobRepository, batchTransactionManager))
+				.from(exportPRDataFromDB(jobRepository, batchTransactionManager)).end().build();
+		
