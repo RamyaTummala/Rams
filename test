@@ -1,1 +1,16 @@
 
+@SuppressWarnings("unchecked")
+	@Bean
+	public Step qualificationEntityStep(JobRepository jobRepository,
+			PlatformTransactionManager batchTransactionManager) throws Exception {
+		return new StepBuilder("qualificationEntityStep", jobRepository)
+				.<QualificationEntity, Organization>chunk(orgchunksize, batchTransactionManager)
+				.reader(pdtQualificationEntityReader)
+				.processor(pdtQualificationEntityProcessor.asyncQualificationEntityItemProcessor())
+				.writer(pdtQualificationEntityWriter.asyncQualificationEntityItemWriter())
+				//.faultTolerant()
+				//.skip(Exception.class).skipLimit(Integer.MAX_VALUE)
+				.taskExecutor(pdtExecuter)
+				// .listener(skipListener())
+				.build();
+	}
