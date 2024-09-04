@@ -1,1 +1,50 @@
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class QualificationEntityStepTest {
 
+    @MockBean
+    private ItemReader<QualificationEntity> pdtQualificationReader;
+
+    @MockBean
+    private ItemProcessor<QualificationEntity, Organization> pdtQualProcessor;
+
+    @MockBean
+    private ItemWriter<Organization> pdtQualWriter;
+
+    @Autowired
+    private JobRepository jobRepository;
+
+    @Autowired
+    private PlatformTransactionManager batchTransactionManager;
+
+    @Autowired
+    private StepBuilderFactory stepBuilderFactory;
+
+    @Test
+    public void testQualificationEntityStep() throws Exception {
+        // Mocking the behavior of reader, processor, and writer
+        when(pdtQualificationReader.read()).thenReturn(new QualificationEntity(), null);
+        when(pdtQualProcessor.process(any(QualificationEntity.class))).thenReturn(new Organization());
+
+        // Creating the step
+        Step qualificationEntityStep = new StepBuilder("qualificationEntityStep", jobRepository)
+                .<QualificationEntity, Organization>chunk(10, batchTransactionManager)
+                .reader(pdtQualificationReader)
+                .processor(pdtQualProcessor)
+                .writer(pdtQualWriter)
+                .build();
+
+        // Executing the step
+        JobExecution jobExecution = jobRepository.createJobExecution("qualificationEntityJob", new JobParameters());
+        StepExecution stepExecution = new StepExecution("qualificationEntityStep", jobExecution);
+        qualificationEntityStep.execute(stepExecution);
+
+        // Verifying interactions
+        verify(pdtQualificationReader, times(2)).read();  // Called twice: one for the entity, one for null (end of reading)
+        verify(pdtQualProcessor, times(1)).process(any(QualificationEntity.class));  // Processed one entity
+        verify(pdtQualWriter, times(1)).write(anyList());  // Writer should have been called once with a list of organizations
+
+        // Additional Assertions
+        Assert.assertEquals(BatchStatus.COMPLETED, stepExecution.getStatus());
+    }
+}
