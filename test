@@ -1,1 +1,78 @@
+package com.anthem.pdt.common.batch.reader;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.sql.DataSource;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.batch.item.NonTransientResourceException;
+import org.springframework.batch.item.ParseException;
+import org.springframework.batch.item.UnexpectedInputException;
+import org.springframework.batch.item.database.JdbcPagingItemReader;
+import org.springframework.batch.item.database.Order;
+import org.springframework.batch.item.database.support.SqlPagingQueryProviderFactoryBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.RowMapper;
+
+import com.anthem.pdt.common.batch.dto.QualificationEntity;
+import com.anthem.pdt.common.constants.Constants;
+
+@Configuration
+public class PdtQualificationEntityReader{
+	
+	private static Logger logger = LoggerFactory.getLogger(PdtQualificationEntityReader.class);	
+	
+	@Qualifier("oracleDataSource")
+	@Autowired
+	private DataSource dataSource;	
+		
+	@Value("${submission.status}")
+	private String submissionStatus;
+	
+	@Value("${current.value}")
+	private int currentvalue;
+	
+	@Value("${mod.value}")
+	private int modvalue ;
+	
+	@Autowired
+	private RowMapper<QualificationEntity> mapper;
+	
+		@Bean
+		public JdbcPagingItemReader<QualificationEntity> qfreader()
+				throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
+			JdbcPagingItemReader<QualificationEntity> read = new JdbcPagingItemReader<>();
+			read.setDataSource(this.dataSource);
+			read.setFetchSize(1000);
+			read.setRowMapper(mapper);
+			
+			Map<String, Order> sortKeys = new HashMap<>();
+			sortKeys.put("id", Order.ASCENDING);
+			
+			final SqlPagingQueryProviderFactoryBean sqlPagingQueryProviderFactoryBean = new SqlPagingQueryProviderFactoryBean();
+			sqlPagingQueryProviderFactoryBean.setDataSource(dataSource);
+			long startTime = System.currentTimeMillis();
+			sqlPagingQueryProviderFactoryBean.setSelectClause(Constants.QUALIFICATION_SELECT_CLAUSE);
+			sqlPagingQueryProviderFactoryBean.setFromClause(Constants.QUALIFICATION_FROM_CLAUSE.replace("$Sbmn_Status$",submissionStatus).replace("$mod_value$", String.valueOf(modvalue)).replace("$currentvalue$", String.valueOf(currentvalue)));
+//			sqlPagingQueryProviderFactoryBean.setWhereClause(Constants.QUALIFICATION_WHERE_CLAUSE);
+			
+			sqlPagingQueryProviderFactoryBean.setSortKey("QUAL_RESOURCE_ID");
+			try {
+				read.setQueryProvider(sqlPagingQueryProviderFactoryBean.getObject());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			logger.info("Time taken for Query Execution is " + String.valueOf(System.currentTimeMillis() - startTime));
+			read.setPageSize(1000);
+			read.setSaveState(false);
+			return read;
+		}
+		
+
+}
