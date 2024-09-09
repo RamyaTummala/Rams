@@ -179,3 +179,79 @@ public class PdtQualificationEntityProcessor {
 		}
 
 		
+package com.anthem.pdt.common.batch.reader;
+
+import static org.mockito.Mockito.*;
+import static org.junit.Assert.*;
+
+import javax.sql.DataSource;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.batch.item.database.JdbcPagingItemReader;
+import org.springframework.batch.item.database.PagingQueryProvider;
+import org.springframework.batch.item.database.support.SqlPagingQueryProviderFactoryBean;
+import org.springframework.jdbc.core.RowMapper;
+
+import com.anthem.pdt.common.batch.dto.QualificationEntity;
+import com.anthem.pdt.common.constants.Constants;
+
+@RunWith(MockitoJUnitRunner.class)
+public class PdtQualificationEntityReaderTest {
+
+    @Mock
+    private DataSource dataSource;
+
+    @Mock
+    private RowMapper<QualificationEntity> mapper;
+
+    @Mock
+    private SqlPagingQueryProviderFactoryBean sqlPagingQueryProviderFactoryBean;
+
+    @Mock
+    private PagingQueryProvider pagingQueryProvider; // Mock the PagingQueryProvider
+
+    @InjectMocks
+    private PdtQualificationEntityReader pdtQualificationEntityReader;
+
+    private String submissionStatus = "SUBMITTED";
+    private int currentvalue = 1;
+    private int modvalue = 5;
+
+    @Before
+    public void setUp() throws Exception {
+        MockitoAnnotations.initMocks(this);
+
+        // Mock the PagingQueryProvider
+        when(sqlPagingQueryProviderFactoryBean.getObject()).thenReturn(pagingQueryProvider);
+
+        // Set necessary values in PdtQualificationEntityReader
+        pdtQualificationEntityReader.submissionStatus = submissionStatus;
+        pdtQualificationEntityReader.currentvalue = currentvalue;
+        pdtQualificationEntityReader.modvalue = modvalue;
+    }
+
+    @Test
+    public void testQfreader() throws Exception {
+        // Call the method under test
+        JdbcPagingItemReader<QualificationEntity> reader = pdtQualificationEntityReader.qfreader();
+
+        // Assert the reader is not null
+        assertNotNull(reader);
+
+        // Verify that fetch size is set to 1000
+        assertEquals(1000, reader.getFetchSize()); // Check fetch size
+
+        // Verify other configurations of the reader
+        assertEquals(1000, reader.getPageSize());  // Page size should also be 1000
+        assertFalse(reader.isSaveState());  // Save state should be disabled
+
+        // Ensure the query provider is set
+        assertNotNull(reader.getQueryProvider());
+    }
+}
