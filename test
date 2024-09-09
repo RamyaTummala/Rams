@@ -159,3 +159,23 @@ public class PdtQualificationEntityReaderTest {
         assert(!reader.isSaveState());
     }
 }
+public class PdtQualificationEntityProcessor {
+
+	@Autowired
+	private CustomQualificationProcessor customQualificationProcessor;
+
+	@Bean
+    public AsyncItemProcessor asyncQualificationEntityItemProcessor() throws Exception{
+       AsyncItemProcessor<QualificationEntity, Organization> asyncItemProcessor = new AsyncItemProcessor<>();
+       asyncItemProcessor.setDelegate(processorqe());
+       asyncItemProcessor.setTaskExecutor(new SimpleAsyncTaskExecutor());
+       asyncItemProcessor.afterPropertiesSet();
+       return asyncItemProcessor;
+    }
+	 @Bean
+		public ItemProcessor<QualificationEntity, Organization> processorqe() {
+
+			return customQualificationProcessor;
+		}
+
+		
