@@ -429,3 +429,18 @@ public class PdtQualificationEntityReaderTest {
         verify(queryProviderFactoryBean).setSortKey("QUAL_RESOURCE_ID");
     }
 }
+@Test
+public void testQfReader() throws Exception {
+    JdbcPagingItemReader<QualificationEntity> itemReader = reader.qfreader();
+
+    // Access private fields using reflection
+    DataSource dataSourceField = (DataSource) getField(itemReader, "dataSource");
+    RowMapper<QualificationEntity> rowMapperField = (RowMapper<QualificationEntity>) getField(itemReader, "rowMapper");
+    int fetchSizeField = (int) getField(itemReader, "fetchSize");
+
+    // Assert values
+    assertEquals(30, fetchSizeField);  // Fetch size from DB
+    assertEquals(1000, (int) getField(itemReader, "pageSize"));  // Page size for processing
+    assertEquals(dataSource, dataSourceField);  // DataSource
+    assertEquals(rowMapper, rowMapperField);  // RowMapper
+}
