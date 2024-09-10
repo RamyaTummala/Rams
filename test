@@ -356,4 +356,76 @@ public class CustomQualificationWriter implements ItemWriter<Organization> {
 				
 }		}
 	
-	
+
+
+import static org.mockito.Mockito.*;
+import static org.junit.Assert.*;
+
+import java.util.Map;
+import javax.sql.DataSource;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.batch.item.database.JdbcPagingItemReader;
+import org.springframework.batch.item.database.support.SqlPagingQueryProviderFactoryBean;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.RowMapper;
+
+import com.anthem.pdt.common.batch.dto.QualificationEntity;
+
+@RunWith(MockitoJUnitRunner.class)
+public class PdtQualificationEntityReaderTest {
+
+    @InjectMocks
+    private PdtQualificationEntityReader reader; // Class under test
+
+    @Mock
+    private DataSource dataSource;
+
+    @Mock
+    private RowMapper<QualificationEntity> rowMapper;
+
+    @Mock
+    private SqlPagingQueryProviderFactoryBean queryProviderFactoryBean;
+
+    @Value("${submission.status}")
+    private String submissionStatus = "COMPLETED";
+
+    @Value("${current.value}")
+    private int currentvalue = 1;
+
+    @Value("${mod.value}")
+    private int modvalue = 2;
+
+    @Before
+    public void setUp() throws Exception {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void testQfReader() throws Exception {
+        // Mock the query provider object
+        when(queryProviderFactoryBean.getObject()).thenReturn(null);
+
+        // Call the method under test
+        JdbcPagingItemReader<QualificationEntity> itemReader = reader.qfreader();
+
+        // Assert that the correct fetch size and page size are set
+        assertEquals(30, itemReader.getFetchSize()); // Fetch size from DB
+        assertEquals(1000, itemReader.getPageSize()); // Page size for processing
+
+        // Assert data source and row mapper are set correctly
+        assertEquals(dataSource, itemReader.getDataSource());
+        assertEquals(rowMapper, itemReader.getRowMapper());
+
+        // Verify the query provider factory bean interactions
+        verify(queryProviderFactoryBean).setSelectClause(Constants.QUALIFICATION_SELECT_CLAUSE);
+        verify(queryProviderFactoryBean).setFromClause(anyString());
+        verify(queryProviderFactoryBean).setSortKey("QUAL_RESOURCE_ID");
+    }
+}
