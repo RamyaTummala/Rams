@@ -1,1 +1,16 @@
+{
+						"type": {
+							"coding": [
+								{
+									"system": "http://bpd.bcbs.com/CodeSystem/BCBSIdentifierTypeCS",
+									"code": "PCRN",
+									"display": "Provider Cross Reference Number"
+								}
+							]
+						},
+						"value": "462791677",
+						"period": {
+							"end": "2023-05-18"
+						}
+					},
 
